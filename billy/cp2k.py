@@ -5,7 +5,7 @@ import numpy as np
 class CP2KManager:
 
     """
-    General class for managing and automating CP2K workflow. 
+    General class for managing a single CP2K job. 
 
     As I have gathered, the workflow for running an AIMD simulation should generally follow the steps below:
     1. Optimize relevant structures in G16
@@ -47,7 +47,47 @@ class CP2KManager:
         
         self.theory = theory
         self.path = path
-    
+        self.files = os.listdir(self.path)
+
+    def read_xyz(self, file=None):
+
+        """
+        Reads either the goemetry.xyz initial geometry file, or the final structure in the trajectory PROJECT-pos-1.xyz file
+        """
+
+        if file != None:
+            xyz_file = f"{self.path}/"
+
+        elif 'PROJECT-pos-1.xyz' in self.files:
+            xyz_file = f"{self.path}/PROJECT-pos-1.xyz"
+
+        elif 'geometry.xyz' in self.files:
+            xyz_file = f"{self.path}/geometry.xyz"
+
+        else: raise FileNotFoundError('No xyz file detected in specified directory!')
+
+        with open(xyz_file) as f:
+            natoms = int(f.readline().split()[0])
+            
+        with open(xyz_file) as f:
+            line_count = len(f.readlines())
+
+        if line_count == natoms + 2:
+            skip = 2
+
+        else:
+            skip = line_count - natoms
+
+        geom = np.loadtxt(xyz_file, delimiter=None, dtype=str, skiprows=skip)
+
+        atoms = geom[:,0]
+        xyz = geom[:,1:4].astype(float)
+        kinds = np.unique(atoms)
+
+        self.atoms = atoms
+        self.xyz = xyz
+        self.kinds = kinds
+
     def set_theory(self, key, val):
 
         try:
@@ -56,21 +96,14 @@ class CP2KManager:
         except:
             raise KeyError(f"Unrecognized key '{key}'. Supported keywords are: 'nproc', 'mem', 'chk', 'method', 'basis_set', 'jobtype', 'other_options', 'disp', 'charge', 'multiplicty' and 'extra'")
 
-    def load_xyz(self, file):
-        
-        xyz = np.loadtxt(file, delimiter=None, dtype=str, skiprows=2)
-        atoms = xyz[:,0]
-        kinds = np.unique(atoms)
-        
-        self.xyz = xyz
-        self.atoms = atoms
-        self.kinds = kinds
-        self.file = file
+    def build_input(self, file='input.inp', write=False):
 
+        inputgen = CP2KInputGenerator(self)
+        inputgen.assemble(file=file, write=write)
 
     def run(self):
         pass
-
+    
 class CP2KInputGenerator:
 
     """
@@ -86,8 +119,7 @@ class CP2KInputGenerator:
         self.xyz = manager.xyz
         self.atoms = manager.atoms
         self.kinds = manager.kinds
-        self.file = manager.file
-        
+
         for key, val in manager.theory.items():
             
             if key in self.ALLOWED_KEYS:
@@ -151,7 +183,7 @@ class CP2KInputGenerator:
             },
 
             'TOPOLOGY': {
-                'COORD_FILE_NAME': self.file,
+                'COORD_FILE_NAME': 'geometry.xyz',
                 'COORD_FILE_FORMAT': 'XYZ',
                 'CENTER_COORDINATES': {
                     'CENTER_POINT': '0 0 0'
@@ -261,7 +293,7 @@ class CP2KInputGenerator:
             
         return MOTION
                 
-    def assemble(self, file='input.inp', write=False):
+    def assemble(self, file, write):
         
         GLOBAL = {
             'RUN_TYPE': self.RUN_TYPE
