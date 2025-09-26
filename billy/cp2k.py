@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import numpy as np
 
 class CP2KManager:
@@ -99,9 +100,9 @@ class CP2KManager:
     def build_input(self, file='input.inp', write=False):
 
         inputgen = CP2KInputGenerator(self)
-        inputgen.assemble(file=file, write=write)
+        inputgen.assemble(path=self.path, filename=file, write=write)
 
-    def run(self):
+    def run_cp2k(self):
         pass
     
 class CP2KInputGenerator:
@@ -128,31 +129,6 @@ class CP2KInputGenerator:
             else:
                 raise KeyError(f"Unknown parameter: {key}")
         
-    def read_keywords(self, keywords, indent=1):
-        tab = "\t" * indent
-        
-        for key, val in keywords.items():
-            
-            if isinstance(val, list):
-                
-                # Only run this part of the reader if the list only contains dictionaries. (Otherwise it will loop over the list again.)
-                if all(isinstance(item, dict) for item in val):
-                    for section in val:
-                        print(f"{tab}&{key}")
-                        self.read_keywords(section, indent + 1)
-                        print(f"{tab}&END {key}")
-
-                continue
-            
-            if isinstance(val, dict):
-                
-                print(f"{tab}&{key}")
-                self.read_keywords(val, indent=indent+1)
-                print(f"{tab}&END {key}")
-                
-            else:
-                print(f"{tab}{key} {val}")
-                
     def build_kinds(self):
         '''
         Reads your XYZ file and level of theory to build the kinds section in your CP2K input. 
@@ -292,8 +268,33 @@ class CP2KInputGenerator:
             }
             
         return MOTION
+    
+    def read_keywords(self, keywords, indent=1, file = sys.stdout):
+        tab = "\t" * indent
+        
+        for key, val in keywords.items():
+            
+            if isinstance(val, list):
                 
-    def assemble(self, file, write):
+                # Only run this part of the reader if the list only contains dictionaries. (Otherwise it will loop over the list again.)
+                if all(isinstance(item, dict) for item in val):
+                    for section in val:
+                        print(f"{tab}&{key}", file=file)
+                        self.read_keywords(section, indent + 1, file=file)
+                        print(f"{tab}&END {key}", file=file)
+
+                continue
+            
+            if isinstance(val, dict):
+                
+                print(f"{tab}&{key}", file=file)
+                self.read_keywords(val, indent=indent+1, file=file)
+                print(f"{tab}&END {key}", file=file)
+                
+            else:
+                print(f"{tab}{key} {val}", file=file)
+                            
+    def assemble(self, path, filename, write):
         
         GLOBAL = {
             'RUN_TYPE': self.RUN_TYPE
@@ -314,17 +315,16 @@ class CP2KInputGenerator:
             'MOTION': MOTION
         }
 
-        for key, val in assembly.items():
-
-            if write == True:
-
-                with open(file, 'w') as f:
-                    print(f"&{key}", file=f)
+        if write:
+            with open(f"{path}/{filename}", 'w') as f:
+            
+                for key, val in assembly.items():
+                    f.write(f"&{key}\n")
                     self.read_keywords(val, file=f)
-                    print(f"&END {key}", file=f)
-                    f.close()
+                    f.write(f"&END {key}\n")
 
-            else:   
+        else:  
+            for key, val in assembly.items(): 
                 print(f"&{key}")
                 self.read_keywords(val)
                 print(f"&END {key}")

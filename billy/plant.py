@@ -36,9 +36,11 @@ class thePlant:
         os.mkdir('geo_opt')
         shutil.copy('./geometry.xyz', './geo_opt/geometry.xyz')
 
-        manager = CP2KManager('./geo_opt')
-        manager.read_xyz()
-        manager.set_theory('RUN_TYPE', 'GEO_OPT')
+        geo_opt_manager = CP2KManager('./geo_opt')
+        geo_opt_manager.read_xyz()
+        geo_opt_manager.set_theory('RUN_TYPE', 'GEO_OPT')
+
+        geo_opt_manager.run_cp2k()
 
 
 
