@@ -46,7 +46,14 @@ class CP2KManager:
             }
         
         self.theory = theory
-        
+    
+    def set_theory(self, key, val):
+
+        try:
+            self.theory[key] = val
+
+        except:
+            raise KeyError(f"Unrecognized key '{key}'. Supported keywords are: 'nproc', 'mem', 'chk', 'method', 'basis_set', 'jobtype', 'other_options', 'disp', 'charge', 'multiplicty' and 'extra'")
 
     def load_xyz(self, file):
         
@@ -253,16 +260,7 @@ class CP2KInputGenerator:
             
         return MOTION
                 
-    def build_section(self, name, keywords):
-        '''
-        Takes in dictionary to build CP2K input sections. Works with nested dictionaries.
-        '''
-        
-        print(f"&{name}")
-        self.read_keywords(keywords)
-        print(f"&END {name}")
-        
-    def assemble(self):
+    def assemble(self, file='input.inp', write=False):
         
         GLOBAL = {
             'RUN_TYPE': self.RUN_TYPE
@@ -276,7 +274,24 @@ class CP2KInputGenerator:
         }
         
         MOTION = self.build_motion()
-        
-        self.build_section('GLOBAL', GLOBAL)
-        self.build_section('FORCE_EVAL', FORCE_EVAL)
-        self.build_section('MOTION', MOTION)
+
+        assembly = {
+            'GLOBAL': GLOBAL,
+            'FORCE_EVAL': FORCE_EVAL,
+            'MOTION': MOTION
+        }
+
+        for key, val in assembly:
+
+            if write == True:
+
+                with open(file, 'w') as f:
+                    print(f"&{key}", file=f)
+                    self.read_keywords(val, file=f)
+                    print(f"&END {key}", file=f)
+                    f.close()
+
+            else:   
+                print(f"&{key}")
+                self.read_keywords(val)
+                print(f"&END {key}")
