@@ -57,7 +57,7 @@ class CP2KManager:
         """
 
         if file != None:
-            xyz_file = f"{self.path}/"
+            xyz_file = f"{self.path}"
 
         elif 'PROJECT-pos-1.xyz' in self.files:
             xyz_file = f"{self.path}/PROJECT-pos-1.xyz"

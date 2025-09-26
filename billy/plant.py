@@ -24,7 +24,21 @@ class thePlant:
 
     def run_aimd_workflow(self):
 
-        # Start by reading packmol geometry
+        """
+        As I have gathered, the workflow for running an AIMD simulation should generally follow the steps below:
+        1. Optimize relevant structures in G16
+        2. Use packmol to solvate / generate your box
+        3. Optimize this box in CP2K using GEO_OPT
+        4. Optimize the result of GEO_OPT with CELL_OPT
+        5. *Conduct an NVT calculation to equilibriate the temperature
+        6. *NPT Calculation as production run
+
+        *Note that the type of ensemble you use for production will depend on what experiment you are trying to replicate.
+        This is just the most common workflow.
+
+        In order to run this function, step 0 should be first the optimization of structures in g16 (Billy may be able to do this in the future), 
+        and then the creation of your MD cell via packmol, or related program.
+        """
 
         for file in self.files:
             if re.search('*.xyz', file): 
@@ -34,14 +48,26 @@ class thePlant:
         if not xyz_found: raise FileNotFoundError('Error: Billy was unable to find the starting xyz file for your simulations')
 
         os.mkdir('geo_opt')
-        shutil.copy('./geometry.xyz', './geo_opt/geometry.xyz')
+        shutil.copy(f"./{starting_xyz_file}", './geo_opt/geometry.xyz')
 
-        geo_opt_manager = CP2KManager('./geo_opt')
-        geo_opt_manager.read_xyz()
-        geo_opt_manager.set_theory('RUN_TYPE', 'GEO_OPT')
+        geo_opt = CP2KManager('./geo_opt')
+        geo_opt.read_xyz()
+        geo_opt.set_theory('RUN_TYPE', 'GEO_OPT')
+        geo_opt.build_input(write=True)
+        geo_opt.run_cp2k()
 
-        geo_opt_manager.run_cp2k()
+        os.mkdir('cell_opt')
+        cell_opt = CP2KManager('./cell_opt')
+        cell_opt.read_xyz('../geo_opt/PROJECT-pos-1.xyz')
+        cell_opt.set_theory('RUN_TYPE', 'CELL_OPT')
+        cell_opt.build_input(write=True)
+        cell_opt.run_cp2k()
 
+        os.mkdir('nvt')
+        nvt = CP2KManager('./nvt')
+        nvt.read_xyz('../cell_opt/PROJECT-pos-1.xyz')
+        nvt.set_theory('RUN_TYPE', 'MD')
+        nvt.build_input(write=True)
+        nvt.run_cp2k()
 
-
-        pass
+        return True
