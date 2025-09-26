@@ -41,30 +41,30 @@ class thePlant:
         """
 
         for file in self.files:
-            if re.search('*.xyz', file): 
+            if re.search('.xyz', file): 
                 xyz_found = True
                 starting_xyz_file = file
 
         if not xyz_found: raise FileNotFoundError('Error: Billy was unable to find the starting xyz file for your simulations')
 
-        os.mkdir('geo_opt')
-        shutil.copy(f"./{starting_xyz_file}", './geo_opt/geometry.xyz')
+        os.mkdir(f"{self.path}/geo_opt")
+        shutil.copy(f"{self.path}/{starting_xyz_file}", f"{self.path}/geo_opt/geometry.xyz")
 
-        geo_opt = CP2KManager('./geo_opt')
+        geo_opt = CP2KManager(f"{self.path}/geo_opt")
         geo_opt.read_xyz()
         geo_opt.set_theory('RUN_TYPE', 'GEO_OPT')
         geo_opt.build_input(write=True)
         geo_opt.run_cp2k()
 
-        os.mkdir('cell_opt')
-        cell_opt = CP2KManager('./cell_opt')
+        os.mkdir(f"{self.path}/cell_opt")
+        cell_opt = CP2KManager(f"{self.path}/cell_opt")
         cell_opt.read_xyz('../geo_opt/PROJECT-pos-1.xyz')
         cell_opt.set_theory('RUN_TYPE', 'CELL_OPT')
         cell_opt.build_input(write=True)
         cell_opt.run_cp2k()
 
-        os.mkdir('nvt')
-        nvt = CP2KManager('./nvt')
+        os.mkdir(f"{self.path}/nvt")
+        nvt = CP2KManager(f"{self.path}/nvt")
         nvt.read_xyz('../cell_opt/PROJECT-pos-1.xyz')
         nvt.set_theory('RUN_TYPE', 'MD')
         nvt.build_input(write=True)

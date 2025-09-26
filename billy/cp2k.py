@@ -26,7 +26,7 @@ class CP2KManager:
 
             'STEPS': '10000',
             'TIMESTEP': '0.5',
-            'CELL_XYZ': '10 10 10',
+            'CELL_XYZ': '20 20 20',
 
             'RUN_TYPE': 'MD',
             'TEMPERATURE': 300,
