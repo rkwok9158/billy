@@ -8,17 +8,6 @@ class CP2KManager:
     """
     General class for managing a single CP2K job. 
 
-    As I have gathered, the workflow for running an AIMD simulation should generally follow the steps below:
-    1. Optimize relevant structures in G16
-    2. Use packmol to solvate / generate your box
-    3. Optimize this box in CP2K using GEO_OPT
-    4. Optimize the result of GEO_OPT with CELL_OPT
-    5. *Conduct an NVT calculation to equilibriate the temperature
-    6. *NPT Calculation as production run
-
-    *Note that the type of ensemble you use for production will depend on what experiment you are trying to replicate.
-    This is just the most common workflow.
-
     """
 
     def __init__(self, path):
@@ -102,8 +91,32 @@ class CP2KManager:
         inputgen = CP2KInputGenerator(self)
         inputgen.assemble(path=self.path, filename=file, write=write)
 
-    def run_cp2k(self):
-        pass
+    @staticmethod
+    def run_cp2k(path):
+
+        from subprocess import Popen, check_output
+
+        cwd = os.getcwd()
+        os.chdir(path)
+
+        env = os.environ.copy()
+
+        ntasks = env["SLURM_NTASKS"]
+        cp2kX = env["cp2kX"]
+        env["OMP_NUM_THREADS"] = "1"
+
+        with open("machine", 'w') as m:
+            machine = check_output("hostname", shell=True).decode().strip()
+            m.write(machine)
+
+        with open("input.log", 'w') as out:
+
+                job = Popen(["mpiexec", "-n", ntasks, cp2kX, "-i", "input.inp", "-o", "input.out"], stdout=out, stderr=out, env=env)
+                job.wait()
+
+        os.chdir(cwd)
+
+        return job.returncode
     
 class CP2KInputGenerator:
 
