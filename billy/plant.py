@@ -54,20 +54,20 @@ class thePlant:
         geo_opt.read_xyz()
         geo_opt.set_theory('RUN_TYPE', 'GEO_OPT')
         geo_opt.build_input(write=True)
-        geo_opt.run_cp2k()
+        CP2KManager.run_cp2k(geo_opt.path)
 
         os.mkdir(f"{self.path}/cell_opt")
         cell_opt = CP2KManager(f"{self.path}/cell_opt")
         cell_opt.read_xyz('../geo_opt/PROJECT-pos-1.xyz')
         cell_opt.set_theory('RUN_TYPE', 'CELL_OPT')
         cell_opt.build_input(write=True)
-        cell_opt.run_cp2k()
+        CP2KManager.run_cp2k(cell_opt.path)
 
         os.mkdir(f"{self.path}/nvt")
         nvt = CP2KManager(f"{self.path}/nvt")
         nvt.read_xyz('../cell_opt/PROJECT-pos-1.xyz')
         nvt.set_theory('RUN_TYPE', 'MD')
         nvt.build_input(write=True)
-        nvt.run_cp2k()
+        CP2KManager.run_cp2k(nvt.path)
 
         return True
