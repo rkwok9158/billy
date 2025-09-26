@@ -46,6 +46,7 @@ class CP2KManager:
             }
         
         self.theory = theory
+        self.path = path
     
     def set_theory(self, key, val):
 
@@ -281,7 +282,7 @@ class CP2KInputGenerator:
             'MOTION': MOTION
         }
 
-        for key, val in assembly:
+        for key, val in assembly.items():
 
             if write == True:
 
