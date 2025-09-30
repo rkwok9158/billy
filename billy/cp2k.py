@@ -33,8 +33,6 @@ class CP2KManager:
             'RUN_TYPE': 'MD',
             'TEMPERATURE': 300,
             'PERIODIC': 'XYZ',
-            'BASIS_SET_FILE_NAME': 'BASIS_SET',
-            'POTENTIAL_FILE_NAME': 'POTENTIAL'
             }
         
         self.theory = theory
@@ -267,6 +265,7 @@ class CP2KInputGenerator:
             MOTION = {
                 'GEO_OPT': {
                     'OPTIMIZER': 'BDGS',
+                    'BFGS': {},
                     'MAX_ITER': '2000',
                     'MAX_DR': '0.003'
                 }
