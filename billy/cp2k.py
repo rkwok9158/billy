@@ -302,7 +302,10 @@ class CP2KInputGenerator:
                 
                 print(f"{tab}&{key}", file=file)
                 self.read_keywords(val, indent=indent+1, file=file)
-                print(f"{tab}&END {key}", file=file)
+
+                # Some sections in CP2K are annoying, they are entire sections, but operate like keywords. This if loop is supposed to reconcile that.
+                if val == {}: print(f"{tab}&END", file=file)
+                else: print(f"{tab}&END {key}", file=file)
                 
             else:
                 print(f"{tab}{key} {val}", file=file)
@@ -332,6 +335,7 @@ class CP2KInputGenerator:
             with open(f"{path}/{filename}", 'w') as f:
             
                 for key, val in assembly.items():
+
                     f.write(f"&{key}\n")
                     self.read_keywords(val, file=f)
                     f.write(f"&END {key}\n")
