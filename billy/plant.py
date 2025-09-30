@@ -56,6 +56,8 @@ class thePlant:
         geo_opt.build_input(write=True)
         CP2KManager.run_cp2k(geo_opt.path)
 
+        if not CP2KManager.check_status(geo_opt.path): raise RuntimeError(f"Error: GEO_OPT Failed!")
+
         os.mkdir(f"{self.path}/cell_opt")
         cell_opt = CP2KManager(f"{self.path}/cell_opt")
         cell_opt.read_xyz('../geo_opt/PROJECT-pos-1.xyz')
@@ -63,11 +65,15 @@ class thePlant:
         cell_opt.build_input(write=True)
         CP2KManager.run_cp2k(cell_opt.path)
 
+        if not CP2KManager.check_status(cell_opt.path): raise RuntimeError(f"Error: CELL_OPT Failed!")
+
         os.mkdir(f"{self.path}/nvt")
         nvt = CP2KManager(f"{self.path}/nvt")
         nvt.read_xyz('../cell_opt/PROJECT-pos-1.xyz')
         nvt.set_theory('RUN_TYPE', 'MD')
         nvt.build_input(write=True)
         CP2KManager.run_cp2k(nvt.path)
+
+        if not CP2KManager.check_status(nvt.path): raise RuntimeError(f"Error: NVT Failed!")
 
         return True

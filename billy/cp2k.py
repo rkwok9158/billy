@@ -120,6 +120,17 @@ class CP2KManager:
 
         return job.returncode
     
+    @staticmethod
+    def check_status(path):
+        with open(f"{path}/input.out") as f:
+
+            normal_termination = False
+            for line in f.readlines():
+                if re.search('PROGRAM ENDED', line):
+                    normal_termination = True
+
+        return normal_termination
+    
 class CP2KInputGenerator:
 
     """
