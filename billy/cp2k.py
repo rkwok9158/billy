@@ -111,7 +111,7 @@ class CP2KManager:
             machine = check_output("hostname", shell=True).decode().strip()
             m.write(machine)
 
-        with open("input.log", 'w') as out:
+        with open("input.out", 'w') as out:
 
                 job = Popen(["mpiexec", "-n", ntasks, cp2kX, "-i", "input.inp", "-o", "input.out"], stdout=out, stderr=out, env=env)
                 job.wait()
