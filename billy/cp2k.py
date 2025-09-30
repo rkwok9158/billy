@@ -151,17 +151,15 @@ class CP2KInputGenerator:
         Reads your XYZ file and level of theory to build the kinds section in your CP2K input. 
         '''
         
-        kinds_section = []
+        kinds_section = {}
         
         for at in self.kinds:
-            kind = {
+            kinds_section[f"KIND {at}"] = {
                 'ELEMENT': at,
                 'BASIS_SET': self.BASIS_SET,
                 'POTENTIAL': self.PSEUDOPOTENTIAL
             }
-            
-            kinds_section.append(kind)
-            
+   
         return kinds_section
         
     def build_subsys(self):
@@ -182,11 +180,10 @@ class CP2KInputGenerator:
                     'CENTER_POINT': '0 0 0'
                 },
 
-            },
-
-            'KIND': self.build_kinds() # AUTOGEN
-
+            }
         }
+
+        SUBSYS.update(self.build_kinds())
         
         return SUBSYS
         
