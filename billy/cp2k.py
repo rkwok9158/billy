@@ -3,6 +3,8 @@ import re
 import sys
 import numpy as np
 
+from .util import ElementManager
+
 class CP2KManager:
 
     """
@@ -71,6 +73,8 @@ class CP2KManager:
         geom = np.loadtxt(xyz_file, delimiter=None, dtype=str, skiprows=skip)
 
         atoms = geom[:,0]
+        atoms = [ElementManager.element_symbol(at) for at in atoms if at.isdigit()]
+
         xyz = geom[:,1:4].astype(float)
         kinds = np.unique(atoms)
 
