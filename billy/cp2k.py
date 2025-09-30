@@ -305,7 +305,8 @@ class CP2KInputGenerator:
                 self.read_keywords(val, indent=indent+1, file=file)
 
                 # Some sections in CP2K are annoying, they are entire sections, but operate like keywords. This if loop is supposed to reconcile that.
-                if val == {}: print(f"{tab}&END", file=file)
+                if val == {}: print(f"{tab}&END", file=file) # Specifically for XC_FUNCTIONAL
+                elif 'ELEMENT' in val: print(f"{tab}&END", file=file) # Specifically for KINDS
                 else: print(f"{tab}&END {key}", file=file)
                 
             else:
